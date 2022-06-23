@@ -3,18 +3,15 @@ package service.impl;
 import mapper.CustomMapper;
 import model.dto.UserDetailsDTO;
 import model.entity.UserDetails;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import repo.UserDetailsRepo;
-import repo.impl.UserDetailsDAOJDBCImpl;
+import repo.impl.jdbc.UserDetailsDAOJDBCImpl;
 import service.UserDetailsService;
 import util.Queries;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.util.UUID;
 
 class UserDetailsServiceImplTest {
     private UserDetailsService userDetailsService;

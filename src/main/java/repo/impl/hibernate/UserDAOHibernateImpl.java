@@ -1,4 +1,4 @@
-package repo.impl;
+package repo.impl.hibernate;
 
 import model.entity.UserDetails;
 import repo.UserDetailsRepo;

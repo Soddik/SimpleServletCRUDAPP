@@ -1,4 +1,4 @@
-package repo.impl;
+package repo.impl.jdbc;
 
 import model.entity.User;
 import repo.UserDetailsRepo;

@@ -7,6 +7,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import repo.UserDetailsRepo;
 import repo.UserRepo;
+import repo.impl.jdbc.UserDAOJDBCImpl;
+import repo.impl.jdbc.UserDetailsDAOJDBCImpl;
 import util.Queries;
 
 import java.sql.PreparedStatement;

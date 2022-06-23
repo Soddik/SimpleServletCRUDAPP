@@ -1,4 +1,4 @@
-package repo.impl;
+package repo.impl.hibernate;
 
 import model.entity.User;
 import repo.UserRepo;
