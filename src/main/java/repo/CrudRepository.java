@@ -12,7 +12,7 @@ public interface CrudRepository<Entity, ID> {
 
     Entity update(Entity entity);
 
-    void delete(ID id);
+    Boolean delete(ID id);
 
     void deleteAll();
 }

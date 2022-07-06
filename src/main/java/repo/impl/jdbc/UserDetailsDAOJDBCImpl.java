@@ -1,10 +1,14 @@
 package repo.impl.jdbc;
 
 import config.DataBaseConfig;
+import exception.EntityNotFoundException;
 import model.entity.UserDetails;
 import repo.UserDetailsRepo;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -30,99 +34,77 @@ public class UserDetailsDAOJDBCImpl implements UserDetailsRepo {
         } catch (SQLException e) {
             //todo implement logging
             e.printStackTrace();
-        } finally {
-            DataBaseConfig.closeConnection();
         }
-        return null;
+
+        throw new EntityNotFoundException(String.format("Entity %s with id: %s not found", UserDetails.class.getSimpleName(), userDetails.getId()));
     }
 
     @Override
     public UserDetails read(UUID id) {
-        UserDetails userDetails = null;
         try (Connection connection = DataBaseConfig.getConnection(); PreparedStatement statement = connection.prepareStatement(SQL.GET.QUERY)) {
             statement.setObject(1, id);
             ResultSet rs = statement.executeQuery();
 
             if (rs.next()) {
-                userDetails = new UserDetails();
-                userDetails.setId(rs.getObject("id", UUID.class));
-                userDetails.setFirstName(rs.getString("first_name"));
-                userDetails.setLastName(rs.getString("last_name"));
-                userDetails.setPassportNum(rs.getInt("passport_num"));
-                userDetails.setEmail(rs.getString("email"));
+                return createUserDetails(rs);
             }
         } catch (SQLException e) {
             //todo implement logging
             e.printStackTrace();
-        } finally {
-            DataBaseConfig.closeConnection();
         }
-        return userDetails;
+
+        throw new EntityNotFoundException(String.format("Entity %s with id: %s not found", UserDetails.class.getSimpleName(),id));
     }
 
     @Override
     public List<UserDetails> findAll() {
-        List<UserDetails> userDetailsList = null;
         try (Connection connection = DataBaseConfig.getConnection(); PreparedStatement statement = connection.prepareStatement(SQL.GET_ALL.QUERY)) {
             ResultSet rs = statement.executeQuery();
-            userDetailsList = new ArrayList<>();
-            while (rs.next()) {
-                UserDetails userDetails = new UserDetails();
-                userDetails.setId(rs.getObject("id", UUID.class));
-                userDetails.setFirstName(rs.getString("first_name"));
-                userDetails.setLastName(rs.getString("last_name"));
-                userDetails.setPassportNum(rs.getInt("passport_num"));
-                userDetails.setEmail(rs.getString("email"));
+            List<UserDetails> userDetailsList = new ArrayList<>();
 
-                userDetailsList.add(userDetails);
+            while (rs.next()) {
+                userDetailsList.add(createUserDetails(rs));
             }
+            return userDetailsList;
         } catch (SQLException e) {
             //todo implement logging
             e.printStackTrace();
-        } finally {
-            DataBaseConfig.closeConnection();
         }
-        return userDetailsList;
+
+        throw new EntityNotFoundException(String.format("Entity %s not found", UserDetails.class.getSimpleName()));
     }
 
     @Override
     public UserDetails update(UserDetails userDetails) {
-        if (read(userDetails.getId()) != null) {
-            if (!read(userDetails.getId()).equals(userDetails)) {
-                try (Connection connection = DataBaseConfig.getConnection(); PreparedStatement statement = connection.prepareStatement(SQL.UPDATE.QUERY)) {
-                    statement.setString(1, userDetails.getFirstName());
-                    statement.setString(2, userDetails.getLastName());
-                    statement.setInt(3, userDetails.getPassportNum());
-                    statement.setString(4, userDetails.getEmail());
-                    statement.setObject(5, userDetails.getId());
+        try (Connection connection = DataBaseConfig.getConnection(); PreparedStatement statement = connection.prepareStatement(SQL.UPDATE.QUERY)) {
+            statement.setString(1, userDetails.getFirstName());
+            statement.setString(2, userDetails.getLastName());
+            statement.setInt(3, userDetails.getPassportNum());
+            statement.setString(4, userDetails.getEmail());
+            statement.setObject(5, userDetails.getId());
 
-                    statement.execute();
+            statement.execute();
 
-                    return read(userDetails.getId());
-                } catch (SQLException e) {
-                    //TODO implement logger
-                    e.printStackTrace();
-                } finally {
-                    DataBaseConfig.closeConnection();
-                }
-            }
+            return read(userDetails.getId());
+        } catch (SQLException e) {
+            //TODO implement logger
+            e.printStackTrace();
         }
-        return null;
+
+        throw new EntityNotFoundException(String.format("Entity %s with id: %s not found", UserDetails.class.getSimpleName(), userDetails.getId()));
     }
 
     @Override
-    public void delete(UUID id) {
-        if (read(id) != null) {
-            try (Connection connection = DataBaseConfig.getConnection(); PreparedStatement statement = connection.prepareStatement(SQL.DELETE.QUERY)) {
-                statement.setObject(1, id);
-                statement.execute();
-            } catch (SQLException e) {
-                //TODO implement logger
-                e.printStackTrace();
-            } finally {
-                DataBaseConfig.closeConnection();
-            }
+    public Boolean delete(UUID id) {
+        try (Connection connection = DataBaseConfig.getConnection(); PreparedStatement statement = connection.prepareStatement(SQL.DELETE.QUERY)) {
+            statement.setObject(1, id);
+            statement.execute();
+        } catch (SQLException e) {
+            //TODO implement logger
+            e.printStackTrace();
         }
+
+        throw new EntityNotFoundException(String.format("Entity %s with id: %s not found", UserDetails.class.getSimpleName(), id));
     }
 
     @Override
@@ -132,8 +114,6 @@ public class UserDetailsDAOJDBCImpl implements UserDetailsRepo {
         } catch (SQLException e) {
             //TODO implement logger
             e.printStackTrace();
-        } finally {
-            DataBaseConfig.closeConnection();
         }
     }
 
@@ -143,12 +123,24 @@ public class UserDetailsDAOJDBCImpl implements UserDetailsRepo {
         INSERT("INSERT INTO user_details (id, first_name, last_name, passport_num, email) VALUES (uuid_generate_v4(),(?),(?),(?),(?)) RETURNING id;"),
         DELETE("DELETE FROM user_details WHERE id = (?);"),
         DELETE_ALL("TRUNCATE user_details CASCADE;"),
-        UPDATE("UPDATE user_details SET first_name = (?), last_name = (?), passport_num = (?), email = (?) WHERE id = (?) RETURNING id;");
+        UPDATE("UPDATE user_details SET first_name = (?), last_name = (?), passport_num = (?), email = (?), modified_at = NOW() WHERE id = (?) RETURNING id;");
 
         private final String QUERY;
 
         SQL(String QUERY) {
             this.QUERY = QUERY;
         }
+    }
+
+    private UserDetails createUserDetails(ResultSet rs) throws SQLException {
+        return new UserDetails.Builder()
+                .setId(rs.getObject("id", UUID.class))
+                .setFirstName(rs.getString("first_name"))
+                .setLastName(rs.getString("last_name"))
+                .setPassportNum(rs.getInt("passport_num"))
+                .setEmail(rs.getString("email"))
+                .setCreatedAt(rs.getTimestamp("created_at"))
+                .setModifiedAt(rs.getTimestamp("modified_at"))
+                .build();
     }
 }

@@ -3,9 +3,7 @@ package repo.impl;
 import config.DataBaseConfig;
 import model.entity.User;
 import model.entity.UserDetails;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import repo.UserDetailsRepo;
 import repo.UserRepo;
 import repo.impl.jdbc.UserDAOJDBCImpl;
@@ -17,15 +15,16 @@ import java.sql.SQLException;
 import java.util.UUID;
 
 class UserDAOJDBCImplTest {
-    private UserRepo userRepo;
+    private static UserRepo userRepo;
 
-    private UserDetailsRepo userDetailsRepo;
+    private static UserDetailsRepo userDetailsRepo;
 
-    private UserDetails userDetails;
-    private User user;
+    private static UserDetails userDetails;
+    private static User user;
+    private static UUID userId;
 
-    @BeforeEach
-    void init() {
+    @BeforeAll
+    static void init() {
         userRepo = new UserDAOJDBCImpl();
         userDetailsRepo = new UserDetailsDAOJDBCImpl();
 
@@ -35,26 +34,27 @@ class UserDAOJDBCImplTest {
             e.printStackTrace();
         }
 
-        userDetails = new UserDetails();
-        userDetails.setFirstName("Alex");
-        userDetails.setLastName("G");
-        userDetails.setEmail("place_holder@mail.net");
-        userDetails.setPassportNum(12345);
+        userDetails = new UserDetails.Builder()
+                .setFirstName("Alex")
+                .setLastName("G")
+                .setPassportNum(12345)
+                .setEmail("placeholder@mail.com")
+                .build();
 
-        user = new User();
-        user.setLogin("SOD");
-        user.setPassword("qwerty");
-        user.setUserDetails(userDetails);
+        user = new User.Builder()
+                .setLogin("SOD")
+                .setPassword("qwerty")
+                .setUserDetails(userDetails)
+                .build();
     }
 
     @Test
     void create() {
-        UUID detailsID = userDetailsRepo.create(userDetails).getId();
-        user.getUserDetails().setId(detailsID);
-
+        System.out.println("====Create====");
 
         User fromBase = userRepo.create(user);
-        user.setId(fromBase.getId());
+        userId = fromBase.getId();
+        user.setId(userId);
 
         System.out.println("handmade: " + user);
         System.out.println("frombase: " + fromBase);
@@ -62,41 +62,33 @@ class UserDAOJDBCImplTest {
 
     @Test
     void read() {
-        UUID detailsID = userDetailsRepo.create(userDetails).getId();
-        user.getUserDetails().setId(detailsID);
-
-        UUID id = userRepo.create(user).getId();
-
-        Assertions.assertNotNull(userRepo.read(id));
+        System.out.println("====Read====");
+        System.out.println(userRepo.read(userId));
+        Assertions.assertNotNull(userRepo.read(userId));
     }
 
     @Test
     void findAll() {
-        UUID detailsID = userDetailsRepo.create(userDetails).getId();
-        user.getUserDetails().setId(detailsID);
-
-        userRepo.create(user);
-
+        System.out.println("====Find all====");
         System.out.println(userRepo.findAll());
     }
 
     @Test
     void update() {
-        UUID detailsID = userDetailsRepo.create(userDetails).getId();
-        user.getUserDetails().setId(detailsID);
+        System.out.println("====UPDATE====");
+        System.out.println("====BEFORE====");
+        System.out.println(userRepo.read(userId));
 
-        System.out.println("BEFORE");
-        System.out.println(userRepo.create(user));
-
-        userDetails.setEmail("OMG@NET.NET");
         user.setPassword("******");
 
-        System.out.println("AFTER");
+        System.out.println("====AFTER====");
         System.out.println(userRepo.update(user));
     }
 
     @Test
     void delete() {
+        System.out.println("====DELETE====");
+       // System.out.println(userRepo.delete(userId));
     }
 
     @Test

@@ -29,11 +29,11 @@ class UserDetailsDAOJDBCImplTest {
             e.printStackTrace();
         }
 
-        userDetails = new UserDetails();
-        userDetails.setFirstName("Alex");
-        userDetails.setLastName("G");
-        userDetails.setEmail("place_holder@mail.net");
-        userDetails.setPassportNum(12345);
+        userDetails = new UserDetails.Builder()
+                .setFirstName("Alex")
+                .setLastName("G")
+                .setPassportNum(12345)
+                .build();
     }
 
     @Test

@@ -1,7 +1,7 @@
 package service.impl;
 
 import config.DataBaseConfig;
-import mapper.CustomMapper;
+import mapper.UserDetailsMapper;
 import model.dto.UserDetailsDTO;
 import model.entity.UserDetails;
 import org.junit.jupiter.api.BeforeEach;
@@ -14,7 +14,7 @@ import util.Queries;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
-class UserDetailsServiceImplTest {
+class UserDetailsServiceTest {
     private UserDetailsService userDetailsService;
     private UserDetailsRepo repo;
 
@@ -24,7 +24,7 @@ class UserDetailsServiceImplTest {
     @BeforeEach
     void init() {
         repo = new UserDetailsDAOJDBCImpl();
-        userDetailsService = new UserDetailsServiceImpl(repo);
+        userDetailsService = new UserDetailsService(repo);
 
         try (PreparedStatement statement = DataBaseConfig.getConnection().prepareStatement(Queries.INIT_QUERY)) {
             statement.execute();
@@ -32,13 +32,13 @@ class UserDetailsServiceImplTest {
             e.printStackTrace();
         }
 
-        userDetails = new UserDetails();
-        userDetails.setFirstName("Alex");
-        userDetails.setLastName("G");
-        userDetails.setEmail("place_holder@mail.net");
-        userDetails.setPassportNum(12345);
+        userDetails = new UserDetails.Builder()
+                .setFirstName("Alex")
+                .setLastName("G")
+                .setPassportNum(12345)
+                .build();
 
-        userDetailsDTO = CustomMapper.toDTO(userDetails);
+        userDetailsDTO = UserDetailsMapper.toDTO(userDetails);
     }
 
     @Test
