@@ -6,7 +6,7 @@ import repo.UserDetailsRepo;
 import java.util.List;
 import java.util.UUID;
 
-public class UserDAOHibernateImpl extends UserDetailsRepo {
+public class UserDAOHibernateImpl implements UserDetailsRepo {
     @Override
     public UserDetails create(UserDetails userDetails) {
         return null;

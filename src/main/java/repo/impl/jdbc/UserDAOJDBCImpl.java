@@ -13,7 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-public class UserDAOJDBCImpl extends UserRepo {
+public class UserDAOJDBCImpl implements UserRepo {
 
     private UserDetailsRepo userDetailsRepo;
 

@@ -4,5 +4,5 @@ import model.entity.UserDetails;
 
 import java.util.UUID;
 
-public abstract class UserDetailsRepo extends CrudRepository<UserDetails, UUID> {
+public interface UserDetailsRepo extends CrudRepository<UserDetails, UUID> {
 }

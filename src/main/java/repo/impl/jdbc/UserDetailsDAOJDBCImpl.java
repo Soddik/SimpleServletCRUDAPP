@@ -9,7 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-public class UserDetailsDAOJDBCImpl extends UserDetailsRepo {
+public class UserDetailsDAOJDBCImpl implements UserDetailsRepo {
 
     @Override
     public UserDetails create(final UserDetails userDetails) {
