@@ -1,6 +1,7 @@
 package repo.impl.jdbc;
 
 import config.DataBaseConfig;
+import exception.EntityNotFoundException;
 import model.entity.User;
 import repo.UserDetailsRepo;
 import repo.UserRepo;
@@ -15,7 +16,7 @@ import java.util.UUID;
 
 public class UserDAOJDBCImpl implements UserRepo {
 
-    private UserDetailsRepo userDetailsRepo;
+    private final UserDetailsRepo userDetailsRepo;
 
     public UserDAOJDBCImpl() {
         this.userDetailsRepo = new UserDetailsDAOJDBCImpl();
@@ -24,9 +25,10 @@ public class UserDAOJDBCImpl implements UserRepo {
     @Override
     public User create(User user) {
         try (Connection connection = DataBaseConfig.getConnection(); PreparedStatement statement = connection.prepareStatement(SQL.INSERT.QUERY, PreparedStatement.RETURN_GENERATED_KEYS)) {
+
             statement.setString(1, user.getLogin());
             statement.setString(2, user.getPassword());
-            statement.setObject(3, user.getUserDetails().getId());
+            statement.setObject(3, userDetailsRepo.create(user.getUserDetails()).getId());
 
             statement.execute();
 
@@ -39,98 +41,77 @@ public class UserDAOJDBCImpl implements UserRepo {
         } catch (SQLException e) {
             //todo implement logging
             e.printStackTrace();
-        } finally {
-            DataBaseConfig.closeConnection();
         }
-        return null;
+        throw new EntityNotFoundException(String.format("Entity %s not created", User.class.getSimpleName()));
     }
 
     @Override
     public User read(UUID id) {
-        User user = null;
         try (Connection connection = DataBaseConfig.getConnection(); PreparedStatement statement = connection.prepareStatement(SQL.GET.QUERY)) {
             statement.setObject(1, id);
             ResultSet rs = statement.executeQuery();
 
             if (rs.next()) {
-                user = new User();
-                user.setId(rs.getObject("id", UUID.class));
-                user.setLogin(rs.getString("login"));
-                user.setPassword(rs.getString("password"));
-                user.setUserDetails(userDetailsRepo.read(rs.getObject("id", UUID.class)));
+                return createUser(rs);
             }
         } catch (SQLException e) {
             //todo implement logging
             e.printStackTrace();
-        } finally {
-            DataBaseConfig.closeConnection();
         }
-        return user;
+        throw new EntityNotFoundException(String.format("Entity %s with id: %s not found", User.class.getSimpleName(), id));
     }
 
     @Override
     public List<User> findAll() {
-        List<User> userList = null;
         try (Connection connection = DataBaseConfig.getConnection(); PreparedStatement statement = connection.prepareStatement(SQL.GET_ALL.QUERY)) {
             ResultSet rs = statement.executeQuery();
-            userList = new ArrayList<>();
-            while (rs.next()) {
-                User user = new User();
-                user.setId(rs.getObject("id", UUID.class));
-                user.setLogin(rs.getString("login"));
-                user.setPassword(rs.getString("password"));
-                user.setUserDetails(userDetailsRepo.read(rs.getObject("id", UUID.class)));
+            List<User> userList = userList = new ArrayList<>();
 
-                userList.add(user);
+            while (rs.next()) {
+                userList.add(createUser(rs));
             }
+
+            return userList;
+
         } catch (SQLException e) {
             //todo implement logging
             e.printStackTrace();
-        } finally {
-            DataBaseConfig.closeConnection();
         }
-        return userList;
+        throw new EntityNotFoundException(String.format("Entities %s not found", User.class.getSimpleName()));
     }
 
     @Override
     public User update(User user) {
-        if (read(user.getId()) != null) {
-            if (!read(user.getId()).equals(user)) {
-                try (Connection connection = DataBaseConfig.getConnection(); PreparedStatement statement = connection.prepareStatement(SQL.UPDATE.QUERY)) {
-                    statement.setString(1, user.getLogin());
-                    statement.setString(2, user.getPassword());
-                    statement.setObject(3, user.getId());
+        try (Connection connection = DataBaseConfig.getConnection(); PreparedStatement statement = connection.prepareStatement(SQL.UPDATE.QUERY)) {
+            statement.setString(1, user.getLogin());
+            statement.setString(2, user.getPassword());
+            statement.setObject(3, user.getId());
 
-                    statement.execute();
+            statement.execute();
 
-                    User fromBase = read(user.getId());
-                    fromBase.setUserDetails(userDetailsRepo.update(user.getUserDetails()));
+            User fromBase = read(user.getId());
+            fromBase.setUserDetails(userDetailsRepo.update(user.getUserDetails()));
 
-                    return fromBase;
-                } catch (SQLException e) {
-                    //TODO implement logger
-                    e.printStackTrace();
-                } finally {
-                    DataBaseConfig.closeConnection();
-                }
-            }
+            return fromBase;
+        } catch (SQLException e) {
+            //TODO implement logger
+            e.printStackTrace();
         }
-        return null;
+
+        throw new EntityNotFoundException(String.format("Entity %s with id: %s not found", User.class.getSimpleName(), user.getId()));
     }
 
     @Override
-    public void delete(UUID id) {
-        if (read(id) != null) {
-            try (Connection connection = DataBaseConfig.getConnection(); PreparedStatement statement = connection.prepareStatement(SQL.DELETE.QUERY)) {
-                statement.setObject(1, id);
-                statement.execute();
-            } catch (SQLException e) {
-                //TODO implement logger
-                e.printStackTrace();
-            } finally {
-                DataBaseConfig.closeConnection();
-            }
+    public Boolean delete(UUID id) {
+        try (Connection connection = DataBaseConfig.getConnection(); PreparedStatement statement = connection.prepareStatement(SQL.DELETE.QUERY)) {
+            statement.setObject(1, id);
+            return statement.execute();
+        } catch (SQLException e) {
+            //TODO implement logger
+            e.printStackTrace();
         }
+
+        throw new EntityNotFoundException(String.format("Entity %s with id: %s not found", User.class.getSimpleName(), id));
     }
 
     @Override
@@ -140,15 +121,22 @@ public class UserDAOJDBCImpl implements UserRepo {
         } catch (SQLException e) {
             //TODO implement logger
             e.printStackTrace();
-        } finally {
-            DataBaseConfig.closeConnection();
         }
+    }
+
+    private User createUser(ResultSet rs) throws SQLException {
+        return new User.Builder()
+                .setId(rs.getObject("id", UUID.class))
+                .setLogin(rs.getString("login"))
+                .setPassword(rs.getString("password"))
+                .setUserDetails(userDetailsRepo.read(rs.getObject("user_details_id", UUID.class)))
+                .build();
     }
 
     private enum SQL {
         GET("SELECT * FROM users WHERE id = (?)"),
         GET_ALL("SELECT * FROM users"),
-        INSERT("INSERT INTO users(id, login, password, details) VALUES(uuid_generate_v4(),(?),(?),(?)) RETURNING id"),
+        INSERT("INSERT INTO users(id, login, password, user_details_id) VALUES(uuid_generate_v4(),(?),(?),(?)) RETURNING id"),
         DELETE("DELETE FROM users WHERE id = (?)"),
         DELETE_ALL("TRUNCATE user CASCADE;"),
         UPDATE("UPDATE users SET login = (?), password = (?) WHERE id = (?) RETURNING id");

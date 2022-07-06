@@ -28,8 +28,8 @@ public class UserDAOHibernateImpl implements UserDetailsRepo {
     }
 
     @Override
-    public void delete(UUID uuid) {
-
+    public Boolean delete(UUID uuid) {
+        return null;
     }
 
     @Override
