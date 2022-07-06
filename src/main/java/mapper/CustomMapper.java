@@ -6,6 +6,7 @@ import model.entity.User;
 import model.entity.UserDetails;
 
 public class CustomMapper {
+    //todo implement builder pattern for DTOs $ Entities w/more than 3 params
 
     public static UserDTO toDTO(User user) {
         return new UserDTO(user.getId(), user.getLogin(), toDTO(user.getUserDetails()));

@@ -1,5 +1,6 @@
 package repo.impl.jdbc;
 
+import config.DataBaseConfig;
 import model.entity.UserDetails;
 import repo.UserDetailsRepo;
 
@@ -12,7 +13,7 @@ public class UserDetailsDAOJDBCImpl extends UserDetailsRepo {
 
     @Override
     public UserDetails create(final UserDetails userDetails) {
-        try (Connection connection = super.getConnection(); PreparedStatement statement = connection.prepareStatement(SQL.INSERT.QUERY, PreparedStatement.RETURN_GENERATED_KEYS)) {
+        try (Connection connection = DataBaseConfig.getConnection(); PreparedStatement statement = connection.prepareStatement(SQL.INSERT.QUERY, PreparedStatement.RETURN_GENERATED_KEYS)) {
             statement.setString(1, userDetails.getFirstName());
             statement.setString(2, userDetails.getLastName());
             statement.setInt(3, userDetails.getPassportNum());
@@ -30,7 +31,7 @@ public class UserDetailsDAOJDBCImpl extends UserDetailsRepo {
             //todo implement logging
             e.printStackTrace();
         } finally {
-            super.closeConnection();
+            DataBaseConfig.closeConnection();
         }
         return null;
     }
@@ -38,7 +39,7 @@ public class UserDetailsDAOJDBCImpl extends UserDetailsRepo {
     @Override
     public UserDetails read(UUID id) {
         UserDetails userDetails = null;
-        try (Connection connection = super.getConnection(); PreparedStatement statement = connection.prepareStatement(SQL.GET.QUERY)) {
+        try (Connection connection = DataBaseConfig.getConnection(); PreparedStatement statement = connection.prepareStatement(SQL.GET.QUERY)) {
             statement.setObject(1, id);
             ResultSet rs = statement.executeQuery();
 
@@ -54,7 +55,7 @@ public class UserDetailsDAOJDBCImpl extends UserDetailsRepo {
             //todo implement logging
             e.printStackTrace();
         } finally {
-            super.closeConnection();
+            DataBaseConfig.closeConnection();
         }
         return userDetails;
     }
@@ -62,7 +63,7 @@ public class UserDetailsDAOJDBCImpl extends UserDetailsRepo {
     @Override
     public List<UserDetails> findAll() {
         List<UserDetails> userDetailsList = null;
-        try (Connection connection = super.getConnection(); PreparedStatement statement = connection.prepareStatement(SQL.GET_ALL.QUERY)) {
+        try (Connection connection = DataBaseConfig.getConnection(); PreparedStatement statement = connection.prepareStatement(SQL.GET_ALL.QUERY)) {
             ResultSet rs = statement.executeQuery();
             userDetailsList = new ArrayList<>();
             while (rs.next()) {
@@ -79,7 +80,7 @@ public class UserDetailsDAOJDBCImpl extends UserDetailsRepo {
             //todo implement logging
             e.printStackTrace();
         } finally {
-            super.closeConnection();
+            DataBaseConfig.closeConnection();
         }
         return userDetailsList;
     }
@@ -88,7 +89,7 @@ public class UserDetailsDAOJDBCImpl extends UserDetailsRepo {
     public UserDetails update(UserDetails userDetails) {
         if (read(userDetails.getId()) != null) {
             if (!read(userDetails.getId()).equals(userDetails)) {
-                try (Connection connection = super.getConnection(); PreparedStatement statement = connection.prepareStatement(SQL.UPDATE.QUERY)) {
+                try (Connection connection = DataBaseConfig.getConnection(); PreparedStatement statement = connection.prepareStatement(SQL.UPDATE.QUERY)) {
                     statement.setString(1, userDetails.getFirstName());
                     statement.setString(2, userDetails.getLastName());
                     statement.setInt(3, userDetails.getPassportNum());
@@ -102,7 +103,7 @@ public class UserDetailsDAOJDBCImpl extends UserDetailsRepo {
                     //TODO implement logger
                     e.printStackTrace();
                 } finally {
-                    super.closeConnection();
+                    DataBaseConfig.closeConnection();
                 }
             }
         }
@@ -112,27 +113,27 @@ public class UserDetailsDAOJDBCImpl extends UserDetailsRepo {
     @Override
     public void delete(UUID id) {
         if (read(id) != null) {
-            try (Connection connection = super.getConnection(); PreparedStatement statement = connection.prepareStatement(SQL.DELETE.QUERY)) {
+            try (Connection connection = DataBaseConfig.getConnection(); PreparedStatement statement = connection.prepareStatement(SQL.DELETE.QUERY)) {
                 statement.setObject(1, id);
                 statement.execute();
             } catch (SQLException e) {
                 //TODO implement logger
                 e.printStackTrace();
             } finally {
-                super.closeConnection();
+                DataBaseConfig.closeConnection();
             }
         }
     }
 
     @Override
     public void deleteAll() {
-        try (Connection connection = super.getConnection(); PreparedStatement statement = connection.prepareStatement(SQL.DELETE_ALL.QUERY)) {
+        try (Connection connection = DataBaseConfig.getConnection(); PreparedStatement statement = connection.prepareStatement(SQL.DELETE_ALL.QUERY)) {
             statement.execute();
         } catch (SQLException e) {
             //TODO implement logger
             e.printStackTrace();
         } finally {
-            super.closeConnection();
+            DataBaseConfig.closeConnection();
         }
     }
 

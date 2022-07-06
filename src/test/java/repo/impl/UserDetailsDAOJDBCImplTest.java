@@ -1,5 +1,6 @@
 package repo.impl;
 
+import config.DataBaseConfig;
 import model.entity.UserDetails;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -22,7 +23,7 @@ class UserDetailsDAOJDBCImplTest {
     void init() {
         repo = new UserDetailsDAOJDBCImpl();
 
-        try (PreparedStatement statement = repo.getConnection().prepareStatement(Queries.INIT_QUERY)) {
+        try (PreparedStatement statement = DataBaseConfig.getConnection().prepareStatement(Queries.INIT_QUERY)) {
             statement.execute();
         } catch (SQLException e) {
             e.printStackTrace();

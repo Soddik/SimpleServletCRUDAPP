@@ -1,5 +1,6 @@
 package service.impl;
 
+import config.DataBaseConfig;
 import mapper.CustomMapper;
 import model.dto.UserDetailsDTO;
 import model.entity.UserDetails;
@@ -25,7 +26,7 @@ class UserDetailsServiceImplTest {
         repo = new UserDetailsDAOJDBCImpl();
         userDetailsService = new UserDetailsServiceImpl(repo);
 
-        try (PreparedStatement statement = repo.getConnection().prepareStatement(Queries.INIT_QUERY)) {
+        try (PreparedStatement statement = DataBaseConfig.getConnection().prepareStatement(Queries.INIT_QUERY)) {
             statement.execute();
         } catch (SQLException e) {
             e.printStackTrace();

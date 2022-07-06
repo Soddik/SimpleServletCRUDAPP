@@ -1,5 +1,6 @@
 package repo.impl.jdbc;
 
+import config.DataBaseConfig;
 import model.entity.User;
 import repo.UserDetailsRepo;
 import repo.UserRepo;
@@ -22,7 +23,7 @@ public class UserDAOJDBCImpl extends UserRepo {
 
     @Override
     public User create(User user) {
-        try (Connection connection = super.getConnection(); PreparedStatement statement = connection.prepareStatement(SQL.INSERT.QUERY, PreparedStatement.RETURN_GENERATED_KEYS)) {
+        try (Connection connection = DataBaseConfig.getConnection(); PreparedStatement statement = connection.prepareStatement(SQL.INSERT.QUERY, PreparedStatement.RETURN_GENERATED_KEYS)) {
             statement.setString(1, user.getLogin());
             statement.setString(2, user.getPassword());
             statement.setObject(3, user.getUserDetails().getId());
@@ -39,7 +40,7 @@ public class UserDAOJDBCImpl extends UserRepo {
             //todo implement logging
             e.printStackTrace();
         } finally {
-            super.closeConnection();
+            DataBaseConfig.closeConnection();
         }
         return null;
     }
@@ -47,7 +48,7 @@ public class UserDAOJDBCImpl extends UserRepo {
     @Override
     public User read(UUID id) {
         User user = null;
-        try (Connection connection = super.getConnection(); PreparedStatement statement = connection.prepareStatement(SQL.GET.QUERY)) {
+        try (Connection connection = DataBaseConfig.getConnection(); PreparedStatement statement = connection.prepareStatement(SQL.GET.QUERY)) {
             statement.setObject(1, id);
             ResultSet rs = statement.executeQuery();
 
@@ -62,7 +63,7 @@ public class UserDAOJDBCImpl extends UserRepo {
             //todo implement logging
             e.printStackTrace();
         } finally {
-            super.closeConnection();
+            DataBaseConfig.closeConnection();
         }
         return user;
     }
@@ -70,7 +71,7 @@ public class UserDAOJDBCImpl extends UserRepo {
     @Override
     public List<User> findAll() {
         List<User> userList = null;
-        try (Connection connection = super.getConnection(); PreparedStatement statement = connection.prepareStatement(SQL.GET_ALL.QUERY)) {
+        try (Connection connection = DataBaseConfig.getConnection(); PreparedStatement statement = connection.prepareStatement(SQL.GET_ALL.QUERY)) {
             ResultSet rs = statement.executeQuery();
             userList = new ArrayList<>();
             while (rs.next()) {
@@ -86,7 +87,7 @@ public class UserDAOJDBCImpl extends UserRepo {
             //todo implement logging
             e.printStackTrace();
         } finally {
-            super.closeConnection();
+            DataBaseConfig.closeConnection();
         }
         return userList;
     }
@@ -95,7 +96,7 @@ public class UserDAOJDBCImpl extends UserRepo {
     public User update(User user) {
         if (read(user.getId()) != null) {
             if (!read(user.getId()).equals(user)) {
-                try (Connection connection = super.getConnection(); PreparedStatement statement = connection.prepareStatement(SQL.UPDATE.QUERY)) {
+                try (Connection connection = DataBaseConfig.getConnection(); PreparedStatement statement = connection.prepareStatement(SQL.UPDATE.QUERY)) {
                     statement.setString(1, user.getLogin());
                     statement.setString(2, user.getPassword());
                     statement.setObject(3, user.getId());
@@ -110,7 +111,7 @@ public class UserDAOJDBCImpl extends UserRepo {
                     //TODO implement logger
                     e.printStackTrace();
                 } finally {
-                    super.closeConnection();
+                    DataBaseConfig.closeConnection();
                 }
             }
         }
@@ -120,27 +121,27 @@ public class UserDAOJDBCImpl extends UserRepo {
     @Override
     public void delete(UUID id) {
         if (read(id) != null) {
-            try (Connection connection = super.getConnection(); PreparedStatement statement = connection.prepareStatement(SQL.DELETE.QUERY)) {
+            try (Connection connection = DataBaseConfig.getConnection(); PreparedStatement statement = connection.prepareStatement(SQL.DELETE.QUERY)) {
                 statement.setObject(1, id);
                 statement.execute();
             } catch (SQLException e) {
                 //TODO implement logger
                 e.printStackTrace();
             } finally {
-                super.closeConnection();
+                DataBaseConfig.closeConnection();
             }
         }
     }
 
     @Override
     public void deleteAll() {
-        try (Connection connection = super.getConnection(); PreparedStatement statement = connection.prepareStatement(SQL.DELETE_ALL.QUERY)) {
+        try (Connection connection = DataBaseConfig.getConnection(); PreparedStatement statement = connection.prepareStatement(SQL.DELETE_ALL.QUERY)) {
             statement.execute();
         } catch (SQLException e) {
             //TODO implement logger
             e.printStackTrace();
         } finally {
-            super.closeConnection();
+            DataBaseConfig.closeConnection();
         }
     }
 
